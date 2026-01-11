@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crédito Casa C - Control de Pagos</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <header class="wrap header">
+    <div>
+      <h1>🏡 Crédito Casa C</h1>
+      <p class="muted">Pagos, avance y fecha estimada de finalización. Todo clarito, sin sufrimiento.</p>
+    </div>
+
+    <div class="headerActions">
+      <button id="btnReload" class="btn" title="Actualizar datos">🔄 Actualizar</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- BLOQUE: PROGRESO PRINCIPAL -->
+    <section class="card block hero" aria-label="Resumen principal del crédito">
+      <div class="heroTop">
+        <div>
+          <h2 class="heroTitle">📌 Estado del crédito</h2>
+          <p class="muted heroSub">Este resumen se calcula con el histórico del documento.</p>
+        </div>
+
+        <div class="heroBadge" id="heroBadge" title="Estado">
+          ⏳ En curso
+        </div>
+      </div>
+
+      <div class="heroGrid">
+        <div class="heroProgress">
+          <div class="progressHeader">
+            <div class="progressLabel">Avance</div>
+            <div class="progressPercent" id="progressPercent">—%</div>
+          </div>
+
+          <div class="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progressFill" id="progressFill" style="width:0%"></div>
+          </div>
+
+          <div class="progressFoot">
+            <span class="muted">Abonado: <strong id="progressPaid">$0</strong></span>
+            <span class="muted">Restante: <strong id="progressLeft">$0</strong></span>
+          </div>
+        </div>
+
+        <div class="heroKpis">
+          <div class="kpi">
+            <div class="kpiLabel">💳 Total del crédito</div>
+            <div class="kpiValue" id="totalCredito">$0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">✅ Pagos realizados (total abonado)</div>
+            <div class="kpiValue" id="totalAbonado">$0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">🧾 Saldo pendiente</div>
+            <div class="kpiValue" id="saldoRestante">$0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">🕒 Último pago</div>
+            <div class="kpiValue" id="ultimoPago">—</div>
+            <div class="kpiHint" id="ultimoPagoValor"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOQUE: KPI EXTRA (SÚPER ENTENDIBLE) -->
+    <section class="grid cards" aria-label="Indicadores rápidos">
+      <article class="card kpiCard">
+        <div class="label">📅 Meses con pagos registrados</div>
+        <div class="value" id="kpiMonthsWithPayments">—</div>
+        <div class="hint">Cuántos meses aparecen con abonos.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">📊 Promedio mensual (histórico)</div>
+        <div class="value" id="kpiAvgMonthlyAll">—</div>
+        <div class="hint">Promedio usando todo el historial.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">⚡ Promedio últimos 6 meses (con pago)</div>
+        <div class="value" id="kpiAvgMonthly6">—</div>
+        <div class="hint">Para estimar mejor la recta final.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">🎯 Meta de este mes (manual)</div>
+        <div class="value" id="kpiMonthlyGoal">—</div>
+        <div class="hint">Si quieren ponerse una cuota fija.</div>
+      </article>
+    </section>
+
+    <!-- BLOQUE: PROYECCIÓN (MÁS AMIGABLE) -->
+    <section class="card block">
+      <div class="blockHeader">
+        <div>
+          <h2>🔮 Estimación de finalización</h2>
+          <p class="muted tiny">Es una estimación basada en el comportamiento de pagos. No incluye intereses bancarios (si aplican).</p>
+        </div>
+        <div class="pill" id="projectionPill">📍 Estimación</div>
+      </div>
+
+      <div class="controls">
+        <label class="control">
+          <span>Modo de cálculo</span>
+          <select id="projectionMode" aria-label="Modo de cálculo de proyección">
+            <option value="last_month_avg_6">📌 Promedio mensual (últimos 6 meses con pago)</option>
+            <option value="last_month">🧾 Usar el valor del último mes con pago</option>
+            <option value="all_month_avg">📊 Promedio mensual (todo el histórico)</option>
+            <option value="manual">✍️ Cuota mensual manual</option>
+          </select>
+        </label>
+
+        <label class="control" id="manualWrap">
+          <span>Cuota mensual (manual)</span>
+          <input id="manualMonthly" type="number" min="0" step="1000" inputmode="numeric" placeholder="Ej: 900000" />
+          <small class="muted tiny">Tip: si ponen una cuota fija, la estimación se vuelve más clara.</small>
+        </label>
+
+        <div class="projectionResult" aria-label="Resultados de la proyección">
+          <div class="label">💰 Pago mensual usado</div>
+          <div class="value" id="monthlyUsed">$0</div>
+
+          <div class="label">⏳ Meses que faltan (aprox.)</div>
+          <div class="value" id="monthsLeft">—</div>
+
+          <div class="label">🏁 Se terminaría hacia</div>
+          <div class="value" id="payoffDate">—</div>
+
+          <div class="miniProgress">
+            <div class="miniRow">
+              <span class="muted">Avance</span>
+              <strong id="miniPercent">—%</strong>
+            </div>
+            <div class="miniBar">
+              <div class="miniFill" id="miniFill" style="width:0%"></div>
+            </div>
+            <div class="muted tiny" id="miniNote">Mientras más constante sea el pago, más confiable la fecha estimada.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOQUE: HISTÓRICO -->
+    <section class="card block">
+      <div class="blockHeader">
+        <div>
+          <h2>📚 Histórico de pagos</h2>
+          <p class="muted tiny">Puedes buscar por mes, año o valor. La tabla muestra acumulado y saldo.</p>
+        </div>
+
+        <div class="tableTools" aria-label="Filtros de búsqueda">
+          <input id="search" class="input" placeholder="🔎 Buscar (mes, año, valor…)" aria-label="Buscar" />
+          <select id="yearFilter" class="input" aria-label="Filtrar por año">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="table" aria-label="Tabla de histórico">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Mes</th>
+              <th class="right">Valor</th>
+              <th class="right">Acumulado</th>
+              <th class="right">Saldo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="statusRow">
+        <p class="muted tiny" id="status"></p>
+        <p class="muted tiny" id="lastUpdated">🕓 Última actualización: <span id="lastUpdatedValue">—</span></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer muted">
+    Hecho para que no tengan que pelear con tablas. 🙃💛
+  </footer>
+
+  <!-- Micro-animaciones / UX suave sin depender del JS -->
+  <script>
+    // Suaviza el foco para gente mayor (menos "salto" visual)
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t && (t.tagName === "BUTTON" || t.tagName === "SELECT" || t.tagName === "INPUT")) {
+        t.classList.add("touched");
+        setTimeout(() => t.classList.remove("touched"), 250);
+      }
+    });
+  </script>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
